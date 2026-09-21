@@ -3,6 +3,7 @@
 namespace Onetoweb\Quicargo;
 
 use Onetoweb\Quicargo\Endpoint\Endpoints;
+use Onetoweb\Quicargo\Config\Method;
 use GuzzleHttp\RequestOptions;
 use GuzzleHttp\Client as GuzzleCLient;
 
@@ -19,27 +20,14 @@ class Client
     public const BASE_HREF_TEST = 'https://test-app.quicargo.com/api/v1';
     
     /**
-     * Methods.
-     */
-    public const METHOD_GET = 'GET';
-    public const METHOD_POST = 'POST';
-    public const METHOD_PUT = 'PUT';
-    public const METHOD_PATCH = 'PATCH';
-    public const METHOD_DELETE = 'DELETE';
-    
-    /**
-     * @var string
-     */
-    private $apiKey;
-    
-    /**
      * @param string $apiKey
+     * @param bool $testModus = false
      */
-    public function __construct(string $apiKey, bool $testModus = false)
-    {
-        $this->apiKey = $apiKey;
-        $this->testModus = $testModus;
-        
+    public function __construct(
+        #[\SensitiveParameter]
+        private string $apiKey,
+        private bool $testModus = false
+    ) {
         // load endpoints
         $this->loadEndpoints();
     }
@@ -80,7 +68,7 @@ class Client
      */
     public function get(string $endpoint, array $query = []): ?array
     {
-        return $this->request(self::METHOD_GET, $endpoint, [], $query);
+        return $this->request(Method::GET, $endpoint, [], $query);
     }
     
     /**
@@ -91,18 +79,18 @@ class Client
      */
     public function post(string $endpoint, array $data = []): ?array
     {
-        return $this->request(self::METHOD_POST, $endpoint, $data);
+        return $this->request(Method::POST, $endpoint, $data);
     }
     
     /**
-     * @param string $method
+     * @param Method $method
      * @param string $endpoint
      * @param array $data = []
      * @param array $query = []
      * 
      * @return array|NULL
      */
-    public function request(string $method, string $endpoint, array $data = [], array $query = []): ?array
+    public function request(Method $method, string $endpoint, array $data = [], array $query = []): ?array
     {
         // build options
         $options = [
@@ -118,7 +106,7 @@ class Client
         
         
         // make request
-        $response = (new GuzzleCLient())->request($method, $this->getUrl($endpoint), $options);
+        $response = (new GuzzleCLient())->request($method->value, $this->getUrl($endpoint), $options);
         
         // decode json
         $json = json_decode($response->getBody()->getContents(), true);
